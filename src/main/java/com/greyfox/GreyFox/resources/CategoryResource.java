@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -21,9 +23,18 @@ public class CategoryResource {
     CategoryService categoryService;
 
     @GetMapping("")
-    public String getAllCategories(HttpServletRequest request) {
+    public ResponseEntity<List<Category>> getAllCategories(HttpServletRequest request) {
         int userId = (Integer) request.getAttribute("userId");
-        return "Authenticated! UserId: " + userId;
+        List<Category> categories = categoryService.fetchAllCategories(userId);
+        return new ResponseEntity<>(categories, HttpStatus.OK);
+    }
+
+    @GetMapping("/{category_id}")
+    public ResponseEntity<Category> getCategoryById(HttpServletRequest request,
+                                                    @PathVariable("categoryId") Integer categoryid) {
+        int userId = (Integer) request.getAttribute("userId");
+        Category category = categoryService.fetchCategoryById(userId, categoryid);
+        return new ResponseEntity<>(category, HttpStatus.OK);
     }
 
     @PostMapping("")
@@ -34,5 +45,16 @@ public class CategoryResource {
         String description = (String) categoryMap.get("description");
         Category category = categoryService.addCategory(userId, title, description);
         return new ResponseEntity<>(category, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{categoryId}")
+    public ResponseEntity<Map<String, Boolean>> updateCategory(HttpServletRequest request,
+                                                               @PathVariable("categoryId") Integer categoryId,
+                                                               @RequestBody Category category) {
+        int userId = (Integer) request.getAttribute("userId");
+        categoryService.updateCategory(userId, categoryId, category);
+        Map<String, Boolean> map = new HashMap<>();
+        map.put("success", true);
+        return new ResponseEntity<>(map, HttpStatus.OK);
     }
 }
